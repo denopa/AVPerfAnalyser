@@ -1,7 +1,7 @@
 from math import radians, cos, sin, asin, sqrt
 from scipy.interpolate import griddata as interpMatrix
 import numpy as np
-
+import pandas as pd
 
 def haversine(lon1, lat1, lon2, lat2, units): #great circle distance between two points 
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, lon2, lat2]) # convert decimal degrees to radians 
@@ -35,4 +35,12 @@ def getPerf(book, x, units):
     values = book[units].values
     return interpMatrix(points, values, np.array(x))[0]
 
+def loadBook(flightPart, model, takeOffMethod):
+    if takeOffMethod == 'standard':
+        with open('models/'+model+'/'+flightPart+'Standard.csv') as dataFile:
+            book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
+    else:
+        with open('models/'+model+'/'+flightPart+'Short.csv') as dataFile:
+            book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
+    return book
 # interpMatrix(takeOffRollBook.index.values, takeOffRollBook['metres'].values, np.array([isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind]))

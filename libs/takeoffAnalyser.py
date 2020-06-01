@@ -1,5 +1,5 @@
 import pandas as pd 
-from libs.utils import haversine, calcWindComponents, isaDiff, getPerf
+from libs.utils import haversine, calcWindComponents, isaDiff, getPerf, loadBook
 from configuration.units import runwayUnits
 
 
@@ -13,19 +13,7 @@ with open("flights/0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv") as dataFile:
 with open("flights/0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv") as dataFile:
     flight = pd.read_csv(dataFile, header=2)
 
-# LOAD PLANE MODEL CONFIG AND BOOK PERFORMANCE
-with open('models/'+model+'/config.csv') as dataFile:
-    modelConfig = pd.read_csv(dataFile, index_col='Variable')
 
-takeoffPowerTreshold =  float(modelConfig.loc['takeoffPowerTreshold','Value']) #indicates the POWER above which we consider the ground roll to start
-takeoffPowerIndicator = modelConfig.loc['takeoffPowerIndicator','Value']
-
-if takeOffMethod == 'standard':
-    with open('models/'+model+'/takeoffRollStandard.csv') as dataFile:
-        takeOffRollBook = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
-else:
-    with open('models/'+model+'/TakeoffRollShort.csv') as dataFile:
-        takeOffRollBook = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
 
 # DEFINITIONS
 def cleanUp(flight): #put everything in the right format
@@ -44,13 +32,17 @@ def find50feet(flight): #returns the row of the takeoff point
     startAltitude = flight.loc[garminGround,'AltGPS']
     return flight[(flight.index>garminGround)&(flight.AltGPS>startAltitude+50)].index.min()
 
-def findGroundRollStart(groundPortion): #finds the row where take off roll started
+def findGroundRollStart(groundPortion, model): #finds the row where take off roll started. This is model dependent
+    with open('models/'+model+'/config.csv') as dataFile:
+        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+    takeoffPowerTreshold =  float(modelConfig.loc['takeoffPowerTreshold','Value']) #indicates the POWER above which we consider the ground roll to start
+    takeoffPowerIndicator = modelConfig.loc['takeoffPowerIndicator','Value']
     return groundPortion[groundPortion[takeoffPowerIndicator]>takeoffPowerTreshold].index.min()
 
-def calcGroundRoll(flight):
+def calcGroundRoll(flight, model):
     garminGround = flight[flight['OnGrnd'] == 0].index.min() #Garmin Ground indicator
     takeoffPoint = findTakeoff(flight)
-    rollStart = findGroundRollStart(flight[:takeoffPoint])
+    rollStart = findGroundRollStart(flight[:takeoffPoint], model)
     dist = haversine(flight['Longitude'][rollStart], flight['Latitude'][rollStart],flight['Longitude'][takeoffPoint], flight['Latitude'][takeoffPoint], runwayUnits)
     ais = flight.loc[takeoffPoint, 'IAS']
     temp = flight.loc[rollStart, 'OAT']
@@ -60,15 +52,25 @@ def calcGroundRoll(flight):
     track = flight.loc[garminGround:takeoffPoint, 'TRK'].mean()
     return dist, ais, temp, pressAlt, windSpeed, windDirection, track
 
-def calc50feetDistance(flight):
+def calc50feetDistance(flight, model):
     fiftyfeetPoint = find50feet(flight)
-    rollStart = findGroundRollStart(flight[:fiftyfeetPoint])
+    rollStart = findGroundRollStart(flight[:fiftyfeetPoint], model)
     dist = haversine(flight['Longitude'][rollStart], flight['Latitude'][rollStart],flight['Longitude'][fiftyfeetPoint], flight['Latitude'][fiftyfeetPoint], runwayUnits)
-    return dist
+    return dist, flight['IAS'][fiftyfeetPoint]
 
 # MAIN
-flight = cleanUp(flight)
-takeOffRoll, takeOffAIS, temp, pressAlt,  windSpeed, windDirection, track = calcGroundRoll(flight)
-fiftyFeetDistance = calc50feetDistance(flight)
-headwind, crosswind = calcWindComponents(windSpeed, windDirection, track)
-bookTakeOffRoll = getPerf(takeOffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind], runwayUnits)
+def takeOffPerformance(flight, model, takeOffMethod):
+    takeOffRollBook = loadBook('takeOffRoll', model, takeOffMethod)
+    distanceOver50Book = loadBook('distanceOver50', model, takeOffMethod)
+    flight = cleanUp(flight)
+    takeOffRoll, takeOffAIS, temp, pressAlt,  windSpeed, windDirection, track = calcGroundRoll(flight, model)
+    fiftyFeetDistance, fiftyFeetIAS = calc50feetDistance(flight, model)
+    headwind, crosswind = calcWindComponents(windSpeed, windDirection, track)
+    bookTakeOffRoll = getPerf(takeOffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind], runwayUnits)
+    bookDistanceOver50 = getPerf(distanceOver50Book, [isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind], runwayUnits)
+    # load book speeds
+    with open('models/'+model+'/config.csv') as dataFile:
+        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+    bookTakeOffIAS = float(modelConfig.loc['takeoffIAS'+takeOffMethod,'Value'])
+    bookBarrierIAS = float(modelConfig.loc['barrierIAS'+takeOffMethod,'Value'])
+    return takeOffRoll, takeOffRollBook, takeOffAIS, bookTakeOffIAS, fiftyFeetDistance, bookDistanceOver50, fiftyFeetIAS, bookBarrierIAS 
