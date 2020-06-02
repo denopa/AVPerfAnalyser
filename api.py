@@ -14,7 +14,7 @@ from libs.flightAnalyser import analyseFlight
 # configure Flask
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('flights')
-app.config["ALLOWED_EXTENSIONS"] = ["csv"]
+app.config["ALLOWED_EXTENSIONS"] = ["CSV"]
 app.config['EXPLAIN_TEMPLATE_LOADING'] = False
 app.secret_key = b'\xef<\xf0\xd6KE\x82\x11\xa1\x99-\x9b\xf0\x1a(\xe6-\xff\x7f[\xff\xc0k\xe9'
 app.config["DEBUG"] = True #Must be False in prod
@@ -43,20 +43,21 @@ class uploadFlight(Resource):
 
     def post(self):
         csv = request.files['csv']
-        takeOffWeight = float(request.form['takeOffWeight'])
-        takeOffMethod = request.form['takeOffMethod']
+        takeoffWeight = float(request.form['takeoffWeight'].strip())
+        takeoffMethod = request.form['takeoffMethod']
         if csv.filename == '':
             print('No filename')
             return("No filename")
         if self.allowedFiles(csv.filename) : 
-            print("I'm allowed")
             filename = secure_filename(csv.filename)
             csv.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             csvFileName = os.path.join('flights', filename)
-            flightAnalysis = analyseFlight(takeOffWeight,takeOffMethod, csvFileName)
+            print(csvFileName)
+            flightAnalysis = analyseFlight(takeoffWeight,takeoffMethod, csvFileName)
             headers = {'Content-Type': 'text/html; charset=utf-8'}
-            # return make_response(render_template('flightResuts.html', meta=flightAnalysis['meta'], tables=[table.to_html(classes= 'mystyle') for table in flightAnalysis['tables']], titles =['Take Off', 'Climb', 'Cruise', 'Approach']), 200, headers)
-            return("got that far")
+            # return make_response(render_template('flightResults.html', meta=flightAnalysis['meta'], tables=[table.to_html(classes= 'mystyle', formatters={'Variance':'{:.0%}'}) for table in flightAnalysis['tables']], titles =['Take Off', 'Climb', 'Cruise', 'Approach']), 200, headers)
+            return make_response(render_template('flightResults.html', meta=flightAnalysis['meta'], tables=[table.to_html(classes= 'mystyle') for table in flightAnalysis['tables']], titles =['Take Off', 'Climb', 'Cruise', 'Approach']), 200, headers)
+
         else:
             print("file's bad")
             return("Invalid file; only CSVs are accepted")

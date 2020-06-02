@@ -4,10 +4,10 @@ from libs.takeoffAnalyser import takeOffPerformance
 
 
 
-# takeOffWeight = 4135
-# takeOffMethod = 'standard' # 'short`
+# takeoffWeight = 4135
+# takeoffMethod = 'standard' # 'short`
 # csv = '0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv'
-# csvFileName = "flights/0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv"
+# csvFileName = "flights/08934f46-0f14-4bdf-8c7c-5ce4f75d46f7.csv"
 
 def cleanUp(flight): #put everything in the right format
     flight.columns = flight.columns.str.lstrip()
@@ -15,7 +15,7 @@ def cleanUp(flight): #put everything in the right format
     flight[numericals] = flight[numericals].apply(pd.to_numeric, errors='coerce')
     return flight
 
-def analyseFlight(takeOffWeight,takeOffMethod, csvFileName):
+def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
 
     # load model and flight data
     with open(csvFileName) as dataFile:
@@ -25,7 +25,6 @@ def analyseFlight(takeOffWeight,takeOffMethod, csvFileName):
     with open(csvFileName) as dataFile:
         flight = pd.read_csv(dataFile, header=2)
         
-
     flightDate = flight.loc[0, "  Lcl Date"]
     flight = cleanUp(flight)
     fuelStart = flight.loc[0, "FQtyL"] +flight.loc[0, "FQtyR"]
@@ -42,7 +41,7 @@ def analyseFlight(takeOffWeight,takeOffMethod, csvFileName):
     meta = {"registration":registration, "model":model, "flightDate":flightDate,"fuelStart":fuelStart, "fuelEnd":fuelEnd, "maxAltitude":maxAltitude, "maxTAS":maxTAS,"maxIAS":maxIAS, "maxGS":maxGS, 'maxCHT':maxCHT,'maxTIT':maxTIT  }
     
     # run performnance comparisons
-    takeOffAnalysis = takeOffPerformance(flight, model, takeOffMethod, takeOffWeight)
+    takeOffAnalysis = takeOffPerformance(flight, model, takeoffMethod, takeoffWeight)
     climbAnalysis = pd.DataFrame()
     cruiseAnalysis = pd.DataFrame()
     approachAnalysis = pd.DataFrame()
