@@ -1,7 +1,11 @@
 Variable,Value,Comment
 takeoffPowerTreshold,30,#indicates the power above which we consider the ground roll to start
 takeoffPowerIndicator,E1 MAP,#the engine indication referred to in the variable above
-takeoffIASstandard, 78, #
-barrierIASstandard, 91, #
-takeoffIASshort, 69, #
-barrierIASshort, 80, #
+takeoffIASstandard,78, #
+barrierIASstandard,91, #
+takeoffIASshort,69, #
+barrierIASshort,80, #
+engineType,piston, #
+takeoffMAP,42, #
+takeoffRPM,2500, #
+minTakeoffFFlow,38, #
