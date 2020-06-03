@@ -33,6 +33,10 @@ def getPerf(book, x, units):
     indexColumns = book.index.names
     points = book.reset_index()[indexColumns].values
     values = book[units].values
+    i=0
+    for ix in x: #make sure the value to look in the book for is inded in the book, replace by the limit otherwise
+        x[i] = min(book.index.get_level_values(i).max(), max(ix,book.index.get_level_values(i).min()))
+        i = i+1
     return interpMatrix(points, values, np.array(x))[0]
 
 def loadBook(flightPart, model, takeOffMethod):

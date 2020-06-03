@@ -58,19 +58,19 @@ def calc50feetDistance(flight, model):
     return dist, flight['IAS'][fiftyfeetPoint], engineInfo
 
 # MAIN
-def takeOffPerformance(flight, model, takeOffMethod, takeOffWeight):
-    takeOffRollBook = loadBook('takeOffRoll', model, takeOffMethod)
-    distanceOver50Book = loadBook('distanceOver50', model, takeOffMethod)
+def takeOffPerformance(flight, model, takeoffMethod, takeoffWeight):
+    takeOffRollBook = loadBook('takeOffRoll', model, takeoffMethod)
+    distanceOver50Book = loadBook('distanceOver50', model, takeoffMethod)
     takeOffRoll, takeOffAIS, temp, pressAlt,  windSpeed, windDirection, track = calcGroundRoll(flight, model)
     fiftyFeetDistance, barrierIAS, engineInfo = calc50feetDistance(flight, model)
     headwind, crosswind = calcWindComponents(windSpeed, windDirection, track)
-    bookTakeOffRoll = getPerf(takeOffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind], runwayUnits)
-    bookDistanceOver50 = getPerf(distanceOver50Book, [isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind], runwayUnits)
+    bookTakeOffRoll = getPerf(takeOffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
+    bookDistanceOver50 = getPerf(distanceOver50Book, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
     # load book speeds
     with open('models/'+model+'/config.csv') as dataFile:
         modelConfig = pd.read_csv(dataFile, index_col='Variable')
-    bookTakeOffIAS = float(modelConfig.loc['takeoffIAS'+takeOffMethod,'Value'])
-    bookBarrierIAS = float(modelConfig.loc['barrierIAS'+takeOffMethod,'Value'])
+    bookTakeOffIAS = float(modelConfig.loc['takeoffIAS'+takeoffMethod,'Value'])
+    bookBarrierIAS = float(modelConfig.loc['barrierIAS'+takeoffMethod,'Value'])
     takeoffTable = pd.DataFrame(columns=['Flight','Book','Variance', 'Units'])
     takeoffTable.loc['Take off Roll'] = [int(takeOffRoll), int(bookTakeOffRoll),takeOffRoll/bookTakeOffRoll-1, runwayUnits]
     takeoffTable.loc['Take off IAS'] = [int(takeOffAIS), int(bookTakeOffIAS),takeOffAIS/bookTakeOffIAS-1, 'knots']
