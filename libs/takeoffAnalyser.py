@@ -59,8 +59,8 @@ def calc50feetDistance(flight, model):
 
 # MAIN
 def takeOffPerformance(flight, model, takeoffMethod, takeoffWeight):
-    takeOffRollBook = loadBook('takeOffRoll', model, takeoffMethod)
-    distanceOver50Book = loadBook('distanceOver50', model, takeoffMethod)
+    takeOffRollBook = loadBook('takeOffRoll', model, configuration=takeoffMethod)
+    distanceOver50Book = loadBook('distanceOver50', model, configuration=takeoffMethod)
     takeOffRoll, takeOffAIS, temp, pressAlt,  windSpeed, windDirection, track = calcGroundRoll(flight, model)
     fiftyFeetDistance, barrierIAS, engineInfo = calc50feetDistance(flight, model)
     headwind, crosswind = calcWindComponents(windSpeed, windDirection, track)

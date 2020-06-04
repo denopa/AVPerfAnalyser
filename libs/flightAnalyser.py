@@ -6,8 +6,7 @@ from libs.takeoffAnalyser import takeOffPerformance
 
 # takeoffWeight = 4135
 # takeoffMethod = 'standard' # 'short`
-# csv = '0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv'
-# csvFileName = "flights/08934f46-0f14-4bdf-8c7c-5ce4f75d46f7.csv"
+# csvFileName = "flights/0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv"
 
 def cleanUp(flight): #put everything in the right format
     flight.columns = flight.columns.str.lstrip()

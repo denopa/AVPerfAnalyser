@@ -39,12 +39,16 @@ def getPerf(book, x, units):
         i = i+1
     return interpMatrix(points, values, np.array(x))[0]
 
-def loadBook(flightPart, model, takeOffMethod):
-    if takeOffMethod == 'standard':
-        with open('models/'+model+'/'+flightPart+'Standard.csv') as dataFile:
-            book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
+def loadBook(flightPart, model, **configuration):
+    if flightPart == 'climb':
+        with open('models/'+model+'/'+flightPart+'.csv') as dataFile:
+                book = pd.read_csv(dataFile, index_col=['power','tempVISA','pressAlt'])
     else:
-        with open('models/'+model+'/'+flightPart+'Short.csv') as dataFile:
-            book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
+        if configuration == 'standard':
+            with open('models/'+model+'/'+flightPart+'Standard.csv') as dataFile:
+                book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
+        else:
+            with open('models/'+model+'/'+flightPart+'Short.csv') as dataFile:
+                book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
     return book
 # interpMatrix(takeOffRollBook.index.values, takeOffRollBook['metres'].values, np.array([isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind]))
