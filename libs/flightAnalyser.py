@@ -41,7 +41,7 @@ def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
     else:
         maxTIT = None
     meta = {"registration":registration, "model":model, "flightDate":flightDate}
-    flightSummary = pd.DataFrame.from_dict({"fuelStart":fuelStart, "fuelEnd":fuelEnd, "maxAltitude":maxAltitude, "maxTAS":maxTAS,"maxIAS":maxIAS, "maxGS":maxGS, "maxCHT":maxCHT,"maxTIT":maxTIT}, orient='index', columns = [meta['flightDate']])
+    flightSummary = pd.DataFrame.from_dict({"fuelStart":int(fuelStart), "fuelEnd":int(fuelEnd), "maxAltitude":int(maxAltitude), "maxTAS":int(maxTAS),"maxIAS":int(maxIAS), "maxGS":int(maxGS), "maxCHT":int(maxCHT),"maxTIT":int(maxTIT)}, orient='index', columns = [meta['flightDate']])
     flightSummary.index.name = meta['registration']
 
     # run performnance comparisons

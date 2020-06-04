@@ -51,4 +51,10 @@ def loadBook(flightPart, model, **configuration):
             with open('models/'+model+'/'+flightPart+'Short.csv') as dataFile:
                 book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
     return book
+
+def c2f(temp): #convert celsius to farenheit
+    return float(temp)*1.8+32
+
+def maxSpread(cylinders):#find the max temp diff between cylinders
+    return cylinders.max()-cylinders.min()
 # interpMatrix(takeOffRollBook.index.values, takeOffRollBook['metres'].values, np.array([isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind]))

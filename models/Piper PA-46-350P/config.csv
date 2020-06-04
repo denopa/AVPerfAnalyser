@@ -11,3 +11,7 @@ takeoffRPM,2500, #
 minTakeoffFFlow,38, #
 climbPowerTreshold,34,#indicates the power above which the plane is in climb configuration
 climbPowerIndicator,E1 MAP,#the engine indication referred to in the variable above
+climbMaxTIT,1450,#optional
+cimbMaxTITPowerLow,34,# lower power for TIT limit - optional unless climbMaxTIT is included
+cimbMaxTITPowerHigh,38,#higher power for TIT limit - optional unless climbMaxTIT is included
+maxCHT,380,#
