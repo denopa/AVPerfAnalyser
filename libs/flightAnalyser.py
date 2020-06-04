@@ -1,7 +1,7 @@
 
 import pandas as pd
 from libs.takeoffAnalyser import takeOffPerformance
-
+from libs.climbAnalyser import climbPerformance
 
 
 # takeoffWeight = 4135
@@ -24,7 +24,7 @@ def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
     with open(csvFileName) as dataFile:
         flight = pd.read_csv(dataFile, header=2)
         
-    flightDate = flight.loc[0, "  Lcl Date"]
+    flightDate = flight["  Lcl Date"].max()
     flight = cleanUp(flight)
     fuelStart = flight.loc[0, "FQtyL"] +flight.loc[0, "FQtyR"]
     fuelEnd = flight.loc[flight.index.max(),"FQtyL"] +flight.loc[flight.index.max(), "FQtyR"]
@@ -32,17 +32,22 @@ def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
     maxTAS = flight['TAS'].max()
     maxIAS = flight['IAS'].max()
     maxGS = flight['GndSpd'].max()
-    maxCHT = flight[['E1 CHT1','E1 CHT2','E1 CHT3','E1 CHT4','E1 CHT5','E1 CHT6',]].max().max()
+    if 'E1 CHT1' in flight.columns:
+        maxCHT = flight[['E1 CHT1','E1 CHT2','E1 CHT3','E1 CHT4','E1 CHT5','E1 CHT6',]].max().max()
+    else:
+        maxCHT = None
     if 'E1 TIT1' in flight.columns:
         maxTIT = flight['E1 TIT1'].max()
     else:
         maxTIT = None
-    meta = {"registration":registration, "model":model, "flightDate":flightDate,"fuelStart":fuelStart, "fuelEnd":fuelEnd, "maxAltitude":maxAltitude, "maxTAS":maxTAS,"maxIAS":maxIAS, "maxGS":maxGS, 'maxCHT':maxCHT,'maxTIT':maxTIT  }
-    
+    meta = {"registration":registration, "model":model, "flightDate":flightDate}
+    flightSummary = pd.DataFrame.from_dict({"fuelStart":fuelStart, "fuelEnd":fuelEnd, "maxAltitude":maxAltitude, "maxTAS":maxTAS,"maxIAS":maxIAS, "maxGS":maxGS, "maxCHT":maxCHT,"maxTIT":maxTIT}, orient='index', columns = [meta['flightDate']])
+    flightSummary.index.name = meta['registration']
+
     # run performnance comparisons
     takeOffAnalysis = takeOffPerformance(flight, model, takeoffMethod, takeoffWeight)
-    climbAnalysis = pd.DataFrame()
+    climbAnalysis = climbPerformance(flight, model)
     cruiseAnalysis = pd.DataFrame()
     approachAnalysis = pd.DataFrame()
 
-    return {"meta":meta, "tables":[takeOffAnalysis,climbAnalysis, cruiseAnalysis, approachAnalysis]}
+    return {"meta":meta,"tables":[flightSummary, takeOffAnalysis,climbAnalysis, cruiseAnalysis, approachAnalysis]}

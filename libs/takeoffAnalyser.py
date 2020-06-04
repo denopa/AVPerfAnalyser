@@ -50,39 +50,40 @@ def calc50feetDistance(flight, model):
         takeoffMAP = flight['E1 MAP'][fiftyfeetPoint-10:fiftyfeetPoint].mean().round(1)
         takeoffRPM = flight['E1 RPM'][fiftyfeetPoint-10:fiftyfeetPoint].mean().round(0)
         takeoffFFlow = flight['E1 FFlow'][fiftyfeetPoint-10:fiftyfeetPoint].mean().round(1)
-        engineInfo = pd.DataFrame([[takeoffMAP,bookTakeoffMAP, "inches"],[takeoffRPM,bookTakeoffRPM],[takeoffFFlow,bookminTakeoffFFlow, "gph"]],index=["Take off MAP","Take off RPM","Take off Fuel Flow"], columns=["Flight", "Book","Units"])
-        engineInfo["Variance"] = ( engineInfo.Flight / engineInfo.Book -1)
+        engineInfo = pd.DataFrame([[takeoffMAP,bookTakeoffMAP, "inches"],[takeoffRPM,bookTakeoffRPM],[takeoffFFlow,bookminTakeoffFFlow, "gph"]],index=["Take off MAP","Take off RPM","Take off Fuel Flow"], columns=["Actual", "Book","Units"])
+        engineInfo["Variance %"] = round(100*( engineInfo.Actual / engineInfo.Book -1))
+        engineInfo = engineInfo[['Actual','Book','Variance %','Units']]
     else:
-        engineInfo = pd.DataFrame(columns=["Flight", "Book", "Variance", "Units"])
+        engineInfo = pd.DataFrame(columns=["Actual", "Book", "Variance %", "Units"])
 
     return dist, flight['IAS'][fiftyfeetPoint], engineInfo
 
 # MAIN
 def takeOffPerformance(flight, model, takeoffMethod, takeoffWeight):
+    # load book 
     takeOffRollBook = loadBook('takeOffRoll', model, configuration=takeoffMethod)
     distanceOver50Book = loadBook('distanceOver50', model, configuration=takeoffMethod)
+    with open('models/'+model+'/config.csv') as dataFile:
+        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+    bookTakeOffIAS = float(modelConfig.loc['takeoffIAS'+takeoffMethod,'Value'])
+    bookBarrierIAS = float(modelConfig.loc['barrierIAS'+takeoffMethod,'Value'])
+    # actual flight performance
     takeOffRoll, takeOffAIS, temp, pressAlt,  windSpeed, windDirection, track = calcGroundRoll(flight, model)
     fiftyFeetDistance, barrierIAS, engineInfo = calc50feetDistance(flight, model)
     headwind, crosswind = calcWindComponents(windSpeed, windDirection, track)
     bookTakeOffRoll = getPerf(takeOffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
     bookDistanceOver50 = getPerf(distanceOver50Book, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
-    # load book speeds
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
-    bookTakeOffIAS = float(modelConfig.loc['takeoffIAS'+takeoffMethod,'Value'])
-    bookBarrierIAS = float(modelConfig.loc['barrierIAS'+takeoffMethod,'Value'])
-    takeoffTable = pd.DataFrame(columns=['Flight','Book','Variance', 'Units'])
-    takeoffTable.loc['Take off Roll'] = [int(takeOffRoll), int(bookTakeOffRoll),takeOffRoll/bookTakeOffRoll-1, runwayUnits]
-    takeoffTable.loc['Take off IAS'] = [int(takeOffAIS), int(bookTakeOffIAS),takeOffAIS/bookTakeOffIAS-1, 'knots']
-    takeoffTable.loc['Distance over 50 feet'] = [int(fiftyFeetDistance), int(bookDistanceOver50), fiftyFeetDistance/bookDistanceOver50-1, runwayUnits]
-    takeoffTable.loc['AIS over Barrier'] = [int(barrierIAS), int(bookBarrierIAS), barrierIAS/bookBarrierIAS-1, "knots"]
-    takeoffTable.loc['Headwind'] = [round(headwind), '-','-','knots']
+# summary table
+    takeoffTable = pd.DataFrame(columns=['Actual','Book','Variance %', 'Units'])
+    takeoffTable.loc['Take off IAS'] = [int(takeOffAIS), int(bookTakeOffIAS),round(100*(takeOffAIS/bookTakeOffIAS-1)), 'knots']
+    takeoffTable.loc['Take off Roll'] = [int(takeOffRoll), int(bookTakeOffRoll),round(100*(takeOffRoll/bookTakeOffRoll-1)), runwayUnits]
+    takeoffTable.loc['Distance over 50 feet'] = [int(fiftyFeetDistance), int(bookDistanceOver50), round(100*(fiftyFeetDistance/bookDistanceOver50-1)), runwayUnits]
+    takeoffTable.loc['AIS over Barrier'] = [int(barrierIAS), int(bookBarrierIAS), round(100*(barrierIAS/bookBarrierIAS-1)), "knots"]
+    takeoffTable.loc['Headwind'] = [round(headwind),'-','-','knots']
     takeoffTable.loc['Crosswind'] = [round(crosswind), '-','-','knots']
-    takeoffTable.loc['ISA Deviation'] = [round(isaDiff(temp, pressAlt)), '-','-','degrees C']
+    takeoffTable.loc['Temp vs ISA'] = [round(isaDiff(temp, pressAlt)), '-','-','degrees C']
     takeoffTable.loc['Pressure Altitude'] = [pressAlt, '-','-','feet']
     if len(engineInfo)>0:
         takeoffTable = pd.concat([takeoffTable, engineInfo])
-    
-
     return takeoffTable
 
