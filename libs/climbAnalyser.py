@@ -36,7 +36,7 @@ def climbPerformance(flight, model):
     climbTable.loc['Average Vertical Speed'] = [round(climbAlt/climbTime),round(climbAlt/bookClimbPerf[0]),round(100*(1-climbTime/bookClimbPerf[0])),'fpm']
     climbTable.loc['Average IAS'] = [round(climb['IAS'].mean()),'-','-','knots']
     climbTable.loc['Average Power'] = [round(climbPower,1),str(climbBook.index.get_level_values(0).min())+'-'+str(climbBook.index.get_level_values(0).max()),'-',climbPowerIndicator]
-    climbTable.loc['Average Fuel Flow'] = [round(climb['E1 FFlow'].mean()),'-','-','USG']
+    climbTable.loc['Average Fuel Flow'] = [round(climb['E1 FFlow'].mean(),1),'-','-','USG']
     if 'climbMaxTIT' in modelConfig.index:
         maxClimbTIT = climb[(climb['E1 MAP']<float(modelConfig.loc['cimbMaxTITPowerHigh','Value']))&(climb['E1 MAP']>float(modelConfig.loc['cimbMaxTITPowerLow','Value']))]['E1 TIT1'].max()
         climbTable.loc['Max TIT'] = [round(maxClimbTIT), modelConfig.loc['climbMaxTIT','Value'], round(100*(maxClimbTIT/float(modelConfig.loc['climbMaxTIT','Value'])-1)),'degrees F']

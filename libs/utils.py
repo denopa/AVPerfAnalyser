@@ -43,6 +43,9 @@ def loadBook(flightPart, model, **configuration):
     if flightPart == 'climb':
         with open('models/'+model+'/'+flightPart+'.csv') as dataFile:
                 book = pd.read_csv(dataFile, index_col=['power','tempVISA','pressAlt'])
+    elif flightPart == 'cruise':
+        with open('models/'+model+'/'+flightPart+'.csv') as dataFile:
+                book = pd.read_csv(dataFile, index_col=['cruisePowerVariable1','cruisePowerVariable2','tempVISA','pressAlt'])
     else:
         if configuration == 'standard':
             with open('models/'+model+'/'+flightPart+'Standard.csv') as dataFile:

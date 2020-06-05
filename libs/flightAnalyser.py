@@ -1,8 +1,8 @@
-
+# TODO add G-meter indication
 import pandas as pd
 from libs.takeoffAnalyser import takeOffPerformance
 from libs.climbAnalyser import climbPerformance
-
+from libs.cruiseAnalyser import cruisePerformance
 
 # takeoffWeight = 4135
 # takeoffMethod = 'standard' # 'short`
@@ -47,7 +47,7 @@ def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
     # run performnance comparisons
     takeOffAnalysis = takeOffPerformance(flight, model, takeoffMethod, takeoffWeight)
     climbAnalysis = climbPerformance(flight, model)
-    cruiseAnalysis = pd.DataFrame()
+    cruiseAnalysis = cruisePerformance(flight, model, takeoffWeight)
     approachAnalysis = pd.DataFrame()
 
     return {"meta":meta,"tables":[flightSummary, takeOffAnalysis,climbAnalysis, cruiseAnalysis, approachAnalysis]}

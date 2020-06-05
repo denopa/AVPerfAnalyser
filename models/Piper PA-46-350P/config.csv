@@ -20,3 +20,4 @@ cruiseReferenceWeight,3900,#weight the cruise table is based on
 speedGainPer100lbs,0.7,#in knots
 cruisePowerVariable1,E1 MAP,#
 cruisePowerVariable2,E1 RPM,#
+maxTIT,1650,#
