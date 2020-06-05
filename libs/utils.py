@@ -60,4 +60,31 @@ def c2f(temp): #convert celsius to farenheit
 
 def maxSpread(cylinders):#find the max temp diff between cylinders
     return cylinders.max()-cylinders.min()
+
+def engineMetrics(flight, flightTable, model):
+    with open('models/'+model+'/config.csv') as dataFile:
+        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+    flightTable.loc['Average Fuel Flow'] = [round(flight['E1 FFlow'].mean(),1),'-','-','USG']
+    if 'E1 CHT1' in flight.columns:
+        maxCHT = flight[['E1 CHT1','E1 CHT2','E1 CHT3','E1 CHT4','E1 CHT5','E1 CHT6']].max().max()
+        highestAverageCHT = flight[['E1 CHT1','E1 CHT2','E1 CHT3','E1 CHT4','E1 CHT5','E1 CHT6']].mean().max()
+        highestAverageCylinder = flight[['E1 CHT1','E1 CHT2','E1 CHT3','E1 CHT4','E1 CHT5','E1 CHT6']].mean().idxmax()
+        maxCHTSpread = flight[['E1 CHT1','E1 CHT2','E1 CHT3','E1 CHT4','E1 CHT5','E1 CHT6']].apply(maxSpread).max()
+        maxEGTSpread = flight[['E1 EGT1','E1 EGT2','E1 EGT3','E1 EGT4','E1 EGT5','E1 EGT6']].apply(maxSpread).max()
+        flightTable.loc['Max CHT'] = [round(maxCHT),round(float(modelConfig.loc['maxCHT','Value'])), round(100*(maxCHT/float(modelConfig.loc['maxCHT','Value'])-1)),'degrees F'  ]
+        flightTable.loc['Highest Average CHT'] = [round(highestAverageCHT),'-','-','degrees F']
+        flightTable.loc['Hottest Average Cylinder'] = [highestAverageCylinder,'-','-','-']
+        flightTable.loc['Max CHT Spread'] = [round(maxCHTSpread),'-','-','degrees F']
+        flightTable.loc['Max EGT Spread'] = [round(maxEGTSpread),'-','-','degrees F']
+    if 'E1 OilT' in flight.columns:
+        flightTable.loc['Average Oil Temp'] = [round(flight['E1 OilT'].mean()),'-','-','degrees F']
+    if 'E1 OilP' in flight.columns:
+        flightTable.loc['Average Oil Press'] = [round(flight['E1 OilP'].mean()),'-','-','PSI']
+    if 'E1 FPres' in flight.columns:
+        flightTable.loc['Average Fuel Press'] = [round(flight['E1 FPres'].mean()),'-','-','PSI']
+    if 'E1 CDT' in flight.columns:
+        averageICEfficiency = 100*((flight['E1 CDT']-flight['E1 IAT'])/(flight['E1 CDT']-flight['OAT'].apply(c2f))).mean()
+        flightTable.loc['Intercooler Efficiency'] = [round(averageICEfficiency),'-','-','%']
+    return flightTable
+
 # interpMatrix(takeOffRollBook.index.values, takeOffRollBook['metres'].values, np.array([isaDiff(temp, pressAlt), pressAlt, takeOffWeight, headwind]))
