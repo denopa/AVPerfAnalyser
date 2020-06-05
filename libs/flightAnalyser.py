@@ -29,6 +29,8 @@ def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
     fuelStart = flight.loc[0, "FQtyL"] +flight.loc[0, "FQtyR"]
     fuelEnd = flight.loc[flight.index.max(),"FQtyL"] +flight.loc[flight.index.max(), "FQtyR"]
     maxAltitude = flight['AltMSL'].max()
+    maxG = flight['NormAc'].max() +1 
+    minG = flight['NormAc'].min() +1
     maxTAS = flight['TAS'].max()
     maxIAS = flight['IAS'].max()
     maxGS = flight['GndSpd'].max()
@@ -41,8 +43,22 @@ def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
     else:
         maxTIT = None
     meta = {"registration":registration, "model":model, "flightDate":flightDate}
-    flightSummary = pd.DataFrame.from_dict({"fuelStart":int(fuelStart), "fuelEnd":int(fuelEnd), "maxAltitude":int(maxAltitude), "maxTAS":int(maxTAS),"maxIAS":int(maxIAS), "maxGS":int(maxGS), "maxCHT":int(maxCHT),"maxTIT":int(maxTIT)}, orient='index', columns = [meta['flightDate']])
+    flightSummary = pd.DataFrame.from_dict({"Fuel Start":int(fuelStart), "Fuel End":int(fuelEnd), "Max Altitude":int(maxAltitude), "Max Positive Load":round(maxG,2), "Max Negative Load":round(minG,2), "Max IAS":int(maxIAS), "Max TAS":int(maxTAS),"Max GS":int(maxGS), "Max CHT":int(maxCHT),"Max TIT":'-'}, orient='index', columns = [meta['flightDate']])
     flightSummary.index.name = meta['registration']
+    flightSummary.loc['Max TIT'] = int(maxTIT)
+
+    #load book limits
+    with open('models/'+model+'/config.csv') as dataFile:
+        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+    bookMaxFuel = int(modelConfig.loc['maxFuel','Value'])
+    bookMinFuel = int(modelConfig.loc['minFuel','Value'])
+    bookMaxAltitude = int(modelConfig.loc['maxAltitude','Value'])
+    bookMaxG = float(modelConfig.loc['maxG','Value'])
+    bookMinG = float(modelConfig.loc['minG','Value'])
+    bookMaxIAS = int(modelConfig.loc['maxIAS','Value'])
+    bookMaxCHT = int(modelConfig.loc['maxCHT','Value'])
+    bookMaxTIT = int(modelConfig.loc['maxTIT','Value'])
+    flightSummary['Book'] = [bookMaxFuel, bookMinFuel, bookMaxAltitude, bookMaxG, bookMinG, bookMaxIAS,'-','-',bookMaxCHT, bookMaxTIT ]
 
     # run performnance comparisons
     takeOffAnalysis = takeOffPerformance(flight, model, takeoffMethod, takeoffWeight)

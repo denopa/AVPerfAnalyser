@@ -6,6 +6,12 @@ barrierIASstandard,91, #
 takeoffIASshort,69, #
 barrierIASshort,80, #
 engineType,piston, #
+maxFuel,140,#
+minFuel,15,#
+maxAltitude,25000,#
+maxIAS,168,#Vno
+maxG,3.8,#
+minG,0,#
 takeoffMAP,42, #
 takeoffRPM,2500, #
 minTakeoffFFlow,38, #
