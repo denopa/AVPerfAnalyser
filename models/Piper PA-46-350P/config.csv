@@ -27,3 +27,7 @@ speedGainPer100lbs,0.7,#in knots
 cruisePowerVariable1,E1 MAP,#
 cruisePowerVariable2,E1 RPM,#
 maxTIT,1650,#
+stallSpeed,58,#in landing configuration
+thresholdIAS,78,#
+maxLandingWeight,4123,#
+maxCrosswind,15,#

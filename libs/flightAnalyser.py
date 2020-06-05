@@ -3,9 +3,11 @@ import pandas as pd
 from libs.takeoffAnalyser import takeOffPerformance
 from libs.climbAnalyser import climbPerformance
 from libs.cruiseAnalyser import cruisePerformance
+from libs.approachAnalyser import approachPerformance
 
 # takeoffWeight = 4135
 # takeoffMethod = 'standard' # 'short`
+# approachType = 'IFR' # 'VFR'
 # csvFileName = "flights/0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv"
 
 def cleanUp(flight): #put everything in the right format
@@ -14,7 +16,7 @@ def cleanUp(flight): #put everything in the right format
     flight[numericals] = flight[numericals].apply(pd.to_numeric, errors='coerce')
     return flight
 
-def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
+def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
 
     # load model and flight data
     with open(csvFileName) as dataFile:
@@ -64,6 +66,6 @@ def analyseFlight(takeoffWeight,takeoffMethod, csvFileName):
     takeOffAnalysis = takeOffPerformance(flight, model, takeoffMethod, takeoffWeight)
     climbAnalysis = climbPerformance(flight, model)
     cruiseAnalysis = cruisePerformance(flight, model, takeoffWeight)
-    approachAnalysis = pd.DataFrame()
+    approachAnalysis, stabilityAnalysis = approachPerformance(flight, model, approachType, takeoffWeight)
 
-    return {"meta":meta,"tables":[flightSummary, takeOffAnalysis,climbAnalysis, cruiseAnalysis, approachAnalysis]}
+    return {"meta":meta,"tables":[flightSummary, takeOffAnalysis,climbAnalysis, cruiseAnalysis, approachAnalysis, stabilityAnalysis]}
