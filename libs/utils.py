@@ -50,6 +50,7 @@ def loadBook(flightPart, model, **configuration):
         with open('models/'+model+'/'+flightPart+'.csv') as dataFile:
                 book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
     else:
+        configuration = kwargs.get('configuration', 'standard')
         if configuration == 'standard':
             with open('models/'+model+'/'+flightPart+'Standard.csv') as dataFile:
                 book = pd.read_csv(dataFile, index_col=['tempVISA','pressAlt','weight','headwind'])
