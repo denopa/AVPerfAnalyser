@@ -12,7 +12,7 @@ import pandas
 
 from libs.flightAnalyser import analyseFlight
 
-# configure Flask
+# configure Flask   
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = os.path.join('flights')
 app.config["ALLOWED_EXTENSIONS"] = ["CSV"]

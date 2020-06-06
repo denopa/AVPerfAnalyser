@@ -22,7 +22,7 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
     with open(csvFileName) as dataFile:
         metaSource = pd.read_csv(dataFile)
     registration = metaSource.columns[7][14:-1]
-    model = metaSource.columns[2][16:-1]
+    model = metaSource.columns[2][16:-1].replace(" ","")
     with open(csvFileName) as dataFile:
         flight = pd.read_csv(dataFile, header=2)
         
