@@ -1,4 +1,4 @@
-# TODO add G-meter indication
+# TODO save results in database
 import pandas as pd
 from libs.takeoffAnalyser import takeOffPerformance
 from libs.climbAnalyser import climbPerformance
@@ -12,7 +12,7 @@ from libs.approachAnalyser import approachPerformance
 
 def cleanUp(flight): #put everything in the right format
     flight.columns = flight.columns.str.lstrip()
-    numericals = flight.columns.drop(['GPSfix', 'HSIS'])
+    numericals = flight.columns.drop(['GPSfix','HSIS','Lcl Date','Lcl Time','UTCOfst','AtvWpt'])
     flight[numericals] = flight[numericals].apply(pd.to_numeric, errors='coerce')
     return flight
 

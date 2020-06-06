@@ -4,6 +4,7 @@ import os, re
 import sys
 from flask import Flask, request, make_response, jsonify, render_template, send_from_directory, session, url_for, redirect
 from flask_restful import Resource, Api
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 import json 
 from time import sleep
@@ -17,8 +18,18 @@ app.config['UPLOAD_FOLDER'] = os.path.join('flights')
 app.config["ALLOWED_EXTENSIONS"] = ["CSV"]
 app.config['EXPLAIN_TEMPLATE_LOADING'] = False
 app.secret_key = b'\xef<\xf0\xd6KE\x82\x11\xa1\x99-\x9b\xf0\x1a(\xe6-\xff\x7f[\xff\xc0k\xe9'
-app.config["DEBUG"] = True #Must be False in prod
+try:
+    if os.environ['RELEASE_STAGE'] == 'development':
+        app.config["DEBUG"] = True #Must be False in prod
+except:
+    app.config["DEBUG"] = False
+try:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+except:
+    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://localhost/AVPerformance"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 api = Api(app)
+db = SQLAlchemy(app)
 
 class home(Resource):
     def get(self):
