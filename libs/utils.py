@@ -39,7 +39,7 @@ def getPerf(book, x, units):
         i = i+1
     return interpMatrix(points, values, np.array(x))[0]
 
-def loadBook(flightPart, model, **configuration):
+def loadBook(flightPart, model, **kwargs):
     if flightPart == 'climb':
         with open('models/'+model+'/'+flightPart+'.csv') as dataFile:
                 book = pd.read_csv(dataFile, index_col=['power','tempVISA','pressAlt'])
