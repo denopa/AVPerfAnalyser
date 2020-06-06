@@ -64,9 +64,7 @@ def c2f(temp): #convert celsius to farenheit
 def maxSpread(cylinders):#find the max temp diff between cylinders
     return cylinders.max()-cylinders.min()
 
-def engineMetrics(flight, flightTable, model):
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+def engineMetrics(flight, flightTable, modelConfig):
     flightTable.loc['Average Fuel Flow'] = [round(flight['E1 FFlow'].mean(),1),'-','-','USG']
     if 'E1 CHT1' in flight.columns:
         maxCHT = flight[['E1 CHT1','E1 CHT2','E1 CHT3','E1 CHT4','E1 CHT5','E1 CHT6']].max().max()

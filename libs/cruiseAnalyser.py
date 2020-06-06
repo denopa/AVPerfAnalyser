@@ -1,9 +1,7 @@
 import pandas as pd
 from libs.utils import loadBook, getPerf, isaDiff, c2f, maxSpread, engineMetrics
 
-def findCruise(flight, model): #cruise: not a climb power and within 200 feet of the max altitude
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+def findCruise(flight, modelConfig): #cruise: not a climb power and within 200 feet of the max altitude
     climbPowerTreshold = modelConfig.loc['climbPowerTreshold','Value']
     climbPowerIndicator = modelConfig.loc['climbPowerIndicator','Value']
     cruiseMaxAlt = flight['AltB'].max()
@@ -19,12 +17,10 @@ def findCruiseWeight(flight, cruise, model, takeoffWeight):
     fuelWeightPerUSG = float(modelConfig.loc['fuelWeightPerUSG','Value'])
     return takeoffWeight - (startFuel - (cruiseStartFuel + cruiseEndFuel)/2) * fuelWeightPerUSG
 
-def cruisePerformance(flight, model, takeoffWeight):
-    cruise = findCruise(flight, model)
+def cruisePerformance(flight, model, modelConfig, takeoffWeight):
+    cruise = findCruise(flight, modelConfig)
     cruiseWeight = findCruiseWeight(flight, cruise, model, takeoffWeight)
     cruiseBook = loadBook('cruise',model)
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
     cruisePowerVariable1 = modelConfig.loc['cruisePowerVariable1','Value']
     cruisePowerVariable2 = modelConfig.loc['cruisePowerVariable2','Value']
     cruiseReferenceWeight = float(modelConfig.loc['cruiseReferenceWeight','Value'])
@@ -41,6 +37,6 @@ def cruisePerformance(flight, model, takeoffWeight):
     if 'maxTIT' in modelConfig.index:
         maxCruiseTIT = cruise['E1 TIT1'].max()
         cruiseTable.loc['Max TIT'] = [round(maxCruiseTIT), modelConfig.loc['maxTIT','Value'], round(100*(maxCruiseTIT/float(modelConfig.loc['maxTIT','Value'])-1)),'degrees F']
-    cruiseTable = engineMetrics(cruise, cruiseTable, model)
+    cruiseTable = engineMetrics(cruise, cruiseTable, modelConfig)
     cruiseTable.loc['Average Temp vs ISA'] = [round(tempVISA),'-','-','degrees C']
     return cruiseTable     

@@ -1,16 +1,14 @@
 import pandas as pd 
 from libs.utils import haversine, calcWindComponents, isaDiff, getPerf, loadBook, c2f, maxSpread, engineMetrics
 
-def findClimb(flight, model): #select only datapoints where the power indicates a climb
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+def findClimb(flight, modelConfig): #select only datapoints where the power indicates a climb
     climbPowerTreshold = modelConfig.loc['climbPowerTreshold','Value']
     climbPowerIndicator = modelConfig.loc['climbPowerIndicator','Value']
     return flight[flight[climbPowerIndicator]>float(climbPowerTreshold)]
 
-def climbPerformance(flight, model):
+def climbPerformance(flight, model, modelConfig):
     # actual flight performance
-    climb = findClimb(flight, model)
+    climb = findClimb(flight, modelConfig)
     climbStartAlt = climb['AltPress'].min()
     climbEndAlt = climb['AltPress'].max()
     climbAlt = climbEndAlt - climbStartAlt
@@ -18,8 +16,6 @@ def climbPerformance(flight, model):
     taxiFuel = flight.loc[:climb.index.min()]['E1 FFlow'].sum() /3600
     totalClimbFuel = climbUsedFuel + taxiFuel  #book table includes taxi and takeoff, so needs to be included here
     climbTime = len(climb) / 60 #assumes 1 second measure interval
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
     climbPowerIndicator = modelConfig.loc['climbPowerIndicator','Value']
     climbISA = (isaDiff(climb.loc[climb.index.min(),'OAT'], climb.loc[climb.index.min(),'AltPress']) + isaDiff(climb.loc[climb.index.max(),'OAT'], climb.loc[climb.index.max(),'AltPress'])) #taking the average ISA variation across the climb
     climbPower = climb[climbPowerIndicator].mean()
@@ -39,7 +35,7 @@ def climbPerformance(flight, model):
     if 'climbMaxTIT' in modelConfig.index:
         maxClimbTIT = climb[(climb['E1 MAP']<float(modelConfig.loc['cimbMaxTITPowerHigh','Value']))&(climb['E1 MAP']>float(modelConfig.loc['cimbMaxTITPowerLow','Value']))]['E1 TIT1'].max()
         climbTable.loc['Max TIT'] = [round(maxClimbTIT), modelConfig.loc['climbMaxTIT','Value'], round(100*(maxClimbTIT/float(modelConfig.loc['climbMaxTIT','Value'])-1)),'degrees F']
-    climbTable = engineMetrics(climb, climbTable, model)
+    climbTable = engineMetrics(climb, climbTable, modelConfig)
     climbTable.loc['Average temp vs ISA'] = [round(climbISA,1),'-','-','degrees C']
     return(climbTable)
 

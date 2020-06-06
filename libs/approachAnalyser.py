@@ -5,9 +5,7 @@ from configuration.units import runwayUnits
 def findStop(flight):
     return flight[flight.IAS>20].index.max()
 
-def isStable(approach, model, approachType, runwayTrack):
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+def isStable(approach, modelConfig, approachType, runwayTrack):
     VRef = float(modelConfig.loc['stallSpeed','Value'])*1.3
     stable = True
     reasons = []
@@ -24,15 +22,13 @@ def isStable(approach, model, approachType, runwayTrack):
     stableTable['Stability'] =stableTable['Stability'].apply(lambda x: "Unstable" if x else "Stable")
     return stableTable
 
-def calcLandingWeight(flight, model, takeoffWeight, threshold):
+def calcLandingWeight(flight, modelConfig, takeoffWeight, threshold):
     startFuel = flight["FQtyL"].max() +flight["FQtyR"].max()
     landingFuel = flight.loc[threshold-10:threshold+10,"FQtyL"].mean() +flight.loc[threshold-10:threshold+10,"FQtyR"].mean()
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
     fuelWeightPerUSG = float(modelConfig.loc['fuelWeightPerUSG','Value'])
     return takeoffWeight - (startFuel - landingFuel) * fuelWeightPerUSG
 
-def approachPerformance(flight,model,approachType, takeoffWeight):
+def approachPerformance(flight,model, modelConfig,approachType, takeoffWeight):
     stop = findStop(flight)
     landingAltitude = flight.loc[stop,'AltB']
     runwayTrack = flight.loc[stop-10:stop+10,'TRK'].mean()
@@ -43,9 +39,7 @@ def approachPerformance(flight,model,approachType, takeoffWeight):
     else:
         gateHeight = 500
     gate = flight[flight.AltB>(landingAltitude+gateHeight)].index.max() #stabilised approach gate
-    stableTable = isStable(flight.loc[gate:threshold], model, approachType, runwayTrack)
-    with open('models/'+model+'/config.csv') as dataFile:
-        modelConfig = pd.read_csv(dataFile, index_col='Variable')
+    stableTable = isStable(flight.loc[gate:threshold], modelConfig, approachType, runwayTrack)
     thresholdIASBook = float(modelConfig.loc['thresholdIAS','Value'])
     approachTable = pd.DataFrame(columns=['Actual','Book','Variance%','Units'])
     approachTable.loc['IAS over threshold'] = [int(thresholdIAS),int(thresholdIASBook), round(100*(thresholdIAS/thresholdIASBook-1)),'knots']
@@ -55,7 +49,7 @@ def approachPerformance(flight,model,approachType, takeoffWeight):
     windSpeed = flight.loc[threshold,'WndSpd']
     windDirection = flight.loc[threshold,'WndDr']
     headwind, crosswind = calcWindComponents(windSpeed, windDirection, runwayTrack)
-    landingWeight = round(calcLandingWeight(flight, model, takeoffWeight, threshold))
+    landingWeight = round(calcLandingWeight(flight, modelConfig, takeoffWeight, threshold))
     landingWeightBook = float(modelConfig.loc['maxLandingWeight','Value'])
     bookLandingDistance = getPerf(landingDistanceBook,[tempVISA,flight.loc[threshold,'AltPress'], landingWeight, headwind],runwayUnits)
     approachTable.loc['Landing Distance'] = [int(landingDistance),int(bookLandingDistance), round(100*(landingDistance/bookLandingDistance-1)),runwayUnits]
