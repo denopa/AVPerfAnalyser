@@ -33,10 +33,12 @@ def cruisePerformance(flight, model, modelConfig, takeoffWeight):
     cruiseTAS = round(cruise['TAS'].mean(),1)
     cruiseTable = pd.DataFrame(columns=['Actual','Book','Variance%','units'])
     cruiseTable.loc['Average TAS'] = [int(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'knots']
+    cruiseTable.loc['Economy'] = [round(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'nm/g']
     cruiseTable.loc['Average Ground Speed'] = [int(cruise['GndSpd'].mean()),int(bookCruiseTAS), round(100*(cruise['GndSpd'].mean()/bookCruiseTAS-1)), 'knots']
     if 'maxTIT' in modelConfig.index:
         maxCruiseTIT = cruise['E1 TIT1'].max()
         cruiseTable.loc['Max TIT'] = [round(maxCruiseTIT), modelConfig.loc['maxTIT','Value'], round(100*(maxCruiseTIT/float(modelConfig.loc['maxTIT','Value'])-1)),'degrees F']
     cruiseTable = engineMetrics(cruise, cruiseTable, modelConfig)
+    cruiseTable.loc['TAS Economy'] = [round(cruiseTAS/cruiseTable.loc['Average Fuel Flow','Actual'],1), round(bookCruiseTAS/cruiseTable.loc['Average Fuel Flow','Actual'],1), round(100*(1/cruiseTAS*bookCruiseTAS-1)),'nm/g']
     cruiseTable.loc['Average Temp vs ISA'] = [round(tempVISA),'-','-','degrees C']
     return cruiseTable     
