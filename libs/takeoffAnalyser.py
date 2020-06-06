@@ -55,22 +55,22 @@ def calc50feetDistance(flight, modelConfig):
     return dist, flight['IAS'][fiftyfeetPoint], engineInfo
 
 # MAIN
-def takeOffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight):
+def takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight):
     # load book 
-    takeOffRollBook = loadBook('takeOffRoll', model, configuration=takeoffMethod)
+    takeoffRollBook = loadBook('takeoffRoll', model, configuration=takeoffMethod)
     distanceOver50Book = loadBook('distanceOver50', model, configuration=takeoffMethod)
-    bookTakeOffIAS = float(modelConfig.loc['takeoffIAS'+takeoffMethod,'Value'])
+    bookTakeoffIAS = float(modelConfig.loc['takeoffIAS'+takeoffMethod,'Value'])
     bookBarrierIAS = float(modelConfig.loc['barrierIAS'+takeoffMethod,'Value'])
     # actual flight performance
-    takeOffRoll, takeOffAIS, temp, pressAlt,  windSpeed, windDirection, track = calcGroundRoll(flight, modelConfig)
+    takeoffRoll, takeoffAIS, temp, pressAlt,  windSpeed, windDirection, track = calcGroundRoll(flight, modelConfig)
     fiftyFeetDistance, barrierIAS, engineInfo = calc50feetDistance(flight, modelConfig)
     headwind, crosswind = calcWindComponents(windSpeed, windDirection, track)
-    bookTakeOffRoll = getPerf(takeOffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
+    bookTakeoffRoll = getPerf(takeoffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
     bookDistanceOver50 = getPerf(distanceOver50Book, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
 # summary table
     takeoffTable = pd.DataFrame(columns=['Actual','Book','Variance %', 'Units'])
-    takeoffTable.loc['Take off IAS'] = [int(takeOffAIS), int(bookTakeOffIAS),round(100*(takeOffAIS/bookTakeOffIAS-1)), 'knots']
-    takeoffTable.loc['Take off Roll'] = [int(takeOffRoll), int(bookTakeOffRoll),round(100*(takeOffRoll/bookTakeOffRoll-1)), runwayUnits]
+    takeoffTable.loc['Take off IAS'] = [int(takeoffAIS), int(bookTakeoffIAS),round(100*(takeoffAIS/bookTakeoffIAS-1)), 'knots']
+    takeoffTable.loc['Take off Roll'] = [int(takeoffRoll), int(bookTakeoffRoll),round(100*(takeoffRoll/bookTakeoffRoll-1)), runwayUnits]
     takeoffTable.loc['Distance over 50 feet'] = [int(fiftyFeetDistance), int(bookDistanceOver50), round(100*(fiftyFeetDistance/bookDistanceOver50-1)), runwayUnits]
     takeoffTable.loc['AIS over Barrier'] = [int(barrierIAS), int(bookBarrierIAS), round(100*(barrierIAS/bookBarrierIAS-1)), "knots"]
     takeoffTable.loc['Headwind'] = [round(headwind),'-','-','knots']
