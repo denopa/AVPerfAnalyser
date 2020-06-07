@@ -16,6 +16,27 @@ def find50feet(flight): #returns the row of the takeoff point
     startAltitude = flight.loc[garminGround,'AltGPS']
     return flight[(flight.index>garminGround)&(flight.AltGPS>startAltitude+50)].index.min()
 
+def takeoffStability(flight,modelConfig): #returns the row of the takeoff point
+    garminGround = flight[flight['OnGrnd'] == 0].index.min() #Garmin Ground indicator
+    startAltitude = flight.loc[garminGround,'AltGPS']
+    takeoff = findTakeoff(flight)
+    fivehundred = flight[(flight.index>garminGround)&(flight.AltGPS>startAltitude+500)].index.min()
+    maxPitch = int(flight.loc[takeoff:fivehundred, 'Pitch'].max())
+    minPitch = int(flight.loc[takeoff:fivehundred, 'Pitch'].min())
+    maxRoll = int(flight.loc[takeoff:fivehundred, 'Roll'].abs().max())
+    continuousClimb = (flight.loc[takeoff:fivehundred, 'VSpd'].min()>0)
+    bookMaxPitch = int(modelConfig.loc['takeoffMaxPitch','Value'])
+    bookMinPitch = int(modelConfig.loc['takeoffMinPitch','Value'])
+    bookMaxRoll = int(modelConfig.loc['takeoffMaxRoll','Value'])
+    stableTable = pd.DataFrame(columns=['Actual', 'Book', 'Stability', 'Units'])
+    stableTable.loc['Max Pitch'] = [maxPitch,bookMaxPitch,maxPitch>bookMaxPitch, 'degrees']
+    stableTable.loc['Min Pitch'] = [minPitch,bookMinPitch,minPitch<bookMinPitch, 'degrees']
+    stableTable.loc['Max Roll'] = [maxRoll,bookMaxRoll,maxRoll>bookMaxRoll, 'degrees']
+    stableTable.loc['Continuous Climb'] = [continuousClimb,'True',not continuousClimb, '-']
+    stableTable.loc['Overall'] = [stableTable['Stability'].all(), 'True',not(stableTable['Stability'].all()),'-']
+    stableTable['Stability'] = stableTable['Stability'].apply(lambda x: "Unstable" if x else "Stable")
+    return stableTable
+
 def findGroundRollStart(groundPortion, modelConfig): #finds the row where take off roll started. This is model dependent
     takeoffPowerTreshold =  float(modelConfig.loc['takeoffPowerTreshold','Value']) #indicates the POWER above which we consider the ground roll to start
     takeoffPowerIndicator = modelConfig.loc['takeoffPowerIndicator','Value']
@@ -67,6 +88,7 @@ def takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight)
     headwind, crosswind = calcWindComponents(windSpeed, windDirection, track)
     bookTakeoffRoll = getPerf(takeoffRollBook, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
     bookDistanceOver50 = getPerf(distanceOver50Book, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
+    
 # summary table
     takeoffTable = pd.DataFrame(columns=['Actual','Book','Variance %', 'Units'])
     takeoffTable.loc['Take off IAS'] = [int(takeoffAIS), int(bookTakeoffIAS),round(100*(takeoffAIS/bookTakeoffIAS-1)), 'knots']
@@ -79,5 +101,5 @@ def takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight)
     takeoffTable.loc['Pressure Altitude'] = [pressAlt, '-','-','feet']
     if len(engineInfo)>0:
         takeoffTable = pd.concat([takeoffTable, engineInfo])
-    return takeoffTable
+    return takeoffTable, takeoffStability(flight,modelConfig)
 

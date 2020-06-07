@@ -67,7 +67,7 @@ class uploadFlight(Resource):
             flightAnalysis = analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName)
             print(flightAnalysis['tables'][0].dtypes)
             headers = {'Content-Type': 'text/html; charset=utf-8'}
-            return make_response(render_template('flightResults.html', meta=flightAnalysis['meta'], tables=[table.to_html(classes= 'mystyle') for table in flightAnalysis['tables']], titles =['','Summary','Take Off', 'Climb', 'Cruise', 'Approach', 'Approach Stability']), 200, headers)
+            return make_response(render_template('flightResults.html', meta=flightAnalysis['meta'], tables=[table.to_html(classes= 'mystyle') for table in flightAnalysis['tables']], titles =['','Summary','Take Off', 'Take off stability','Climb', 'Cruise', 'Approach', 'Approach Stability']), 200, headers)
 
         else:
             print("file's bad")

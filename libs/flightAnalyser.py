@@ -62,10 +62,11 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
     bookMaxTIT = int(modelConfig.loc['maxTIT','Value'])
     flightSummary['Book'] = [bookMaxFuel, bookMinFuel, bookMaxAltitude, bookMaxG, bookMinG, bookMaxIAS,'-','-',bookMaxCHT, bookMaxTIT ]
 
+
     # run performnance comparisons
-    takeoffAnalysis = takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight)
+    takeoffAnalysis, takeoffStability = takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight)
     climbAnalysis = climbPerformance(flight, model, modelConfig)
     cruiseAnalysis = cruisePerformance(flight, model, modelConfig, takeoffWeight)
-    approachAnalysis, stabilityAnalysis = approachPerformance(flight, model, modelConfig, approachType, takeoffWeight)
+    approachAnalysis, approachStability = approachPerformance(flight, model, modelConfig, approachType, takeoffWeight)
 
-    return {"meta":meta,"tables":[flightSummary, takeoffAnalysis,climbAnalysis, cruiseAnalysis, approachAnalysis, stabilityAnalysis]}
+    return {"meta":meta,"tables":[flightSummary, takeoffAnalysis,takeoffStability, climbAnalysis, cruiseAnalysis, approachAnalysis, approachStability]}

@@ -5,6 +5,9 @@ takeoffIASstandard,78, #
 barrierIASstandard,91, #
 takeoffIASshort,69, #
 barrierIASshort,80, #
+takeoffMaxPitch,15,#
+takeoffMinPitch,5,#
+takeoffMaxRoll,20,#
 engineType,piston, #
 maxFuel,140,#
 minFuel,15,#
