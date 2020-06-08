@@ -5,7 +5,6 @@ import sys
 from flask import Flask, request, make_response, jsonify, render_template, send_from_directory, session, url_for, redirect
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
-from configuration.models import db
 from werkzeug.utils import secure_filename
 import json 
 from time import sleep

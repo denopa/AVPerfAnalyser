@@ -29,11 +29,11 @@ def takeoffStability(flight,modelConfig): #returns the row of the takeoff point
     bookMinPitch = int(modelConfig.loc['takeoffMinPitch','Value'])
     bookMaxRoll = int(modelConfig.loc['takeoffMaxRoll','Value'])
     stableTable = pd.DataFrame(columns=['Actual', 'Book', 'Stability', 'Units'])
-    stableTable.loc['Max Pitch'] = [maxPitch,bookMaxPitch,maxPitch>bookMaxPitch, 'degrees']
-    stableTable.loc['Min Pitch'] = [minPitch,bookMinPitch,minPitch<bookMinPitch, 'degrees']
-    stableTable.loc['Max Roll'] = [maxRoll,bookMaxRoll,maxRoll>bookMaxRoll, 'degrees']
-    stableTable.loc['Continuous Climb'] = [continuousClimb,'True',not continuousClimb, '-']
-    stableTable.loc['Overall'] = [stableTable['Stability'].all(), 'True',not(stableTable['Stability'].all()),'-']
+    stableTable.loc['Takeoff Max Pitch'] = [maxPitch,bookMaxPitch,maxPitch>bookMaxPitch, 'degrees']
+    stableTable.loc['Takeoff Min Pitch'] = [minPitch,bookMinPitch,minPitch<bookMinPitch, 'degrees']
+    stableTable.loc['Takeoff Max Roll'] = [maxRoll,bookMaxRoll,maxRoll>bookMaxRoll, 'degrees']
+    stableTable.loc['Takeoff Continuous Climb'] = [continuousClimb,'True',not continuousClimb, '-']
+    stableTable.loc['Takeoff Stability'] = [stableTable['Stability'].all(), 'True',not(stableTable['Stability'].all()),'-']
     stableTable['Stability'] = stableTable['Stability'].apply(lambda x: "Unstable" if x else "Stable")
     return stableTable
 
@@ -68,10 +68,10 @@ def calc50feetDistance(flight, modelConfig):
         takeoffRPM = flight['E1 RPM'][fiftyfeetPoint-10:fiftyfeetPoint].mean().round(0)
         takeoffFFlow = flight['E1 FFlow'][fiftyfeetPoint-10:fiftyfeetPoint].mean().round(1)
         engineInfo = pd.DataFrame([[takeoffMAP,bookTakeoffMAP, "inches"],[takeoffRPM,bookTakeoffRPM],[takeoffFFlow,bookminTakeoffFFlow, "gph"]],index=["Take off MAP","Take off RPM","Take off Fuel Flow"], columns=["Actual", "Book","Units"])
-        engineInfo["Variance %"] = round(100*( engineInfo.Actual / engineInfo.Book -1))
-        engineInfo = engineInfo[['Actual','Book','Variance %','Units']]
+        engineInfo["Variance"] = round(100*( engineInfo.Actual / engineInfo.Book -1))
+        engineInfo = engineInfo[['Actual','Book','Variance','Units']]
     else:
-        engineInfo = pd.DataFrame(columns=["Actual", "Book", "Variance %", "Units"])
+        engineInfo = pd.DataFrame(columns=["Actual", "Book", "Variance", "Units"])
 
     return dist, flight['IAS'][fiftyfeetPoint], engineInfo
 
@@ -90,15 +90,15 @@ def takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight)
     bookDistanceOver50 = getPerf(distanceOver50Book, [isaDiff(temp, pressAlt), pressAlt, takeoffWeight, headwind], runwayUnits)
     
 # summary table
-    takeoffTable = pd.DataFrame(columns=['Actual','Book','Variance %', 'Units'])
-    takeoffTable.loc['Take off IAS'] = [int(takeoffAIS), int(bookTakeoffIAS),round(100*(takeoffAIS/bookTakeoffIAS-1)), 'knots']
-    takeoffTable.loc['Take off Roll'] = [int(takeoffRoll), int(bookTakeoffRoll),round(100*(takeoffRoll/bookTakeoffRoll-1)), runwayUnits]
-    takeoffTable.loc['Distance over 50 feet'] = [int(fiftyFeetDistance), int(bookDistanceOver50), round(100*(fiftyFeetDistance/bookDistanceOver50-1)), runwayUnits]
-    takeoffTable.loc['AIS over Barrier'] = [int(barrierIAS), int(bookBarrierIAS), round(100*(barrierIAS/bookBarrierIAS-1)), "knots"]
-    takeoffTable.loc['Headwind'] = [round(headwind),'-','-','knots']
-    takeoffTable.loc['Crosswind'] = [round(crosswind), '-','-','knots']
-    takeoffTable.loc['Temp vs ISA'] = [round(isaDiff(temp, pressAlt)), '-','-','degrees C']
-    takeoffTable.loc['Pressure Altitude'] = [pressAlt, '-','-','feet']
+    takeoffTable = pd.DataFrame(columns=['Actual','Book','Variance', 'Units'])
+    takeoffTable.loc['Takeoff IAS'] = [int(takeoffAIS), int(bookTakeoffIAS),round(100*(takeoffAIS/bookTakeoffIAS-1)), 'knots']
+    takeoffTable.loc['Takeoff Roll'] = [int(takeoffRoll), int(bookTakeoffRoll),round(100*(takeoffRoll/bookTakeoffRoll-1)), runwayUnits]
+    takeoffTable.loc['Takeoff Dist. over 50 feet'] = [int(fiftyFeetDistance), int(bookDistanceOver50), round(100*(fiftyFeetDistance/bookDistanceOver50-1)), runwayUnits]
+    takeoffTable.loc['Takeoff AIS over Barrier'] = [int(barrierIAS), int(bookBarrierIAS), round(100*(barrierIAS/bookBarrierIAS-1)), "knots"]
+    takeoffTable.loc['Takeoff Headwind'] = [round(headwind),'-','-','knots']
+    takeoffTable.loc['Takeoff Crosswind'] = [round(crosswind), '-','-','knots']
+    takeoffTable.loc['Takeoff Temp vs ISA'] = [round(isaDiff(temp, pressAlt)), '-','-','degrees C']
+    takeoffTable.loc['Takeoff Pressure Altitude'] = [pressAlt, '-','-','feet']
     if len(engineInfo)>0:
         takeoffTable = pd.concat([takeoffTable, engineInfo])
     return takeoffTable, takeoffStability(flight,modelConfig)

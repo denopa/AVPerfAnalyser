@@ -31,14 +31,17 @@ def cruisePerformance(flight, model, modelConfig, takeoffWeight):
     tempVISA = isaDiff(cruise['OAT'].mean(), pressAlt)
     bookCruiseTAS = getPerf(cruiseBook, [cruisePower1,cruisePower2,tempVISA, pressAlt], 'TAS') + (cruiseReferenceWeight - cruiseWeight) * speedGainPer100lbs / 100
     cruiseTAS = round(cruise['TAS'].mean(),1)
-    cruiseTable = pd.DataFrame(columns=['Actual','Book','Variance%','units'])
-    cruiseTable.loc['Average TAS'] = [int(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'knots']
-    cruiseTable.loc['Economy'] = [round(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'nm/g']
-    cruiseTable.loc['Average Ground Speed'] = [int(cruise['GndSpd'].mean()),int(bookCruiseTAS), round(100*(cruise['GndSpd'].mean()/bookCruiseTAS-1)), 'knots']
+    cruiseTable = pd.DataFrame(columns=['Actual','Book','Variance','units'])
+    cruiseTable.loc['Cruise Average TAS'] = [int(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'knots']
+    cruiseTable.loc['Cruise Economy'] = [round(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'nm/g']
+    cruiseTable.loc['Cruise Average Ground Speed'] = [int(cruise['GndSpd'].mean()),int(bookCruiseTAS), round(100*(cruise['GndSpd'].mean()/bookCruiseTAS-1)), 'knots']
     if 'maxTIT' in modelConfig.index:
         maxCruiseTIT = cruise['E1 TIT1'].max()
-        cruiseTable.loc['Max TIT'] = [round(maxCruiseTIT), modelConfig.loc['maxTIT','Value'], round(100*(maxCruiseTIT/float(modelConfig.loc['maxTIT','Value'])-1)),'degrees F']
-    cruiseTable = engineMetrics(cruise, cruiseTable, modelConfig)
-    cruiseTable.loc['TAS Economy'] = [round(cruiseTAS/cruiseTable.loc['Average Fuel Flow','Actual'],1), round(bookCruiseTAS/cruiseTable.loc['Average Fuel Flow','Actual'],1), round(100*(1/cruiseTAS*bookCruiseTAS-1)),'nm/g']
-    cruiseTable.loc['Average Temp vs ISA'] = [round(tempVISA),'-','-','degrees C']
+        cruiseTable.loc['Cruise Max TIT'] = [round(maxCruiseTIT), modelConfig.loc['maxTIT','Value'], round(100*(maxCruiseTIT/float(modelConfig.loc['maxTIT','Value'])-1)),'degrees F']
+    cruiseTable = engineMetrics(cruise, cruiseTable, modelConfig, 'Cruise')
+    cruiseTable.loc['Cruise TAS Economy'] = [round(cruiseTAS/cruiseTable.loc['Cruise Average Fuel Flow','Actual'],1), round(bookCruiseTAS/cruiseTable.loc['Cruise Average Fuel Flow','Actual'],1), round(100*(1/cruiseTAS*bookCruiseTAS-1)),'nm/g']
+    bookMaxAlt  = float(modelConfig.loc['cruiseMaxAlt','Value'])
+    cruiseTable.loc['Cruise Max Altitude'] = [int(pressAlt), int(bookMaxAlt), round(100*(pressAlt/bookMaxAlt-1)),'feet']
+    
+    cruiseTable.loc['Cruise Average Temp vs ISA'] = [round(tempVISA),'-','-','degrees C']
     return cruiseTable     

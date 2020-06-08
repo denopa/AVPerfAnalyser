@@ -7,18 +7,16 @@ def findStop(flight):
 
 def isStable(approach, modelConfig, approachType, runwayTrack):
     VRef = float(modelConfig.loc['stallSpeed','Value'])*1.3
-    stable = True
-    reasons = []
     stableTable = pd.DataFrame(columns=['Actual','Book','Stability', 'Units'])
-    stableTable.loc['Max IAS'] = [int(approach.IAS.max()), int(VRef+20),approach.IAS.max()>VRef+20, 'knots' ]
-    stableTable.loc['Min IAS'] = [int(approach.IAS.min()), int(VRef),approach.IAS.min()<VRef, 'knots' ]
-    stableTable.loc['Max Sink Rate'] = [int(approach.VSpd.min()), -1000,approach.VSpd.min()<-1000, 'fpm' ]
+    stableTable.loc['Approach Max IAS'] = [int(approach.IAS.max()), int(VRef+20),approach.IAS.max()>VRef+20, 'knots' ]
+    stableTable.loc['Approach Min IAS'] = [int(approach.IAS.min()), int(VRef),approach.IAS.min()<VRef, 'knots' ]
+    stableTable.loc['Approach Max Sink Rate'] = [int(approach.VSpd.min()), -1000,approach.VSpd.min()<-1000, 'fpm' ]
     if approachType == 'IFR':
-        stableTable.loc['Loc deviation'] = [round(approach.HCDI.abs().max(),1), 1,approach.HCDI.abs().max()>1, '-' ]
-        stableTable.loc['Glide deviation'] = [round(approach.VCDI.abs().max(),1), 1,approach.VCDI.abs().max()>1, '-' ]
+        stableTable.loc['Approach Loc deviation'] = [round(approach.HCDI.abs().max(),1), 1,approach.HCDI.abs().max()>1, '-' ]
+        stableTable.loc['Approach Glide deviation'] = [round(approach.VCDI.abs().max(),1), 1,approach.VCDI.abs().max()>1, '-' ]
     else:
         stableTable.loc['Approach Track'] = [int((approach.TRK - runwayTrack).abs().max()), 10,(approach.TRK - runwayTrack).abs().max()>10, 'degrees' ]
-    stableTable.loc['Overall'] = [stableTable['Stability'].all(), 'True',not(stableTable['Stability'].all()),'-']
+    stableTable.loc['Approach Stability'] = [stableTable['Stability'].all(), 'True',not(stableTable['Stability'].all()),'-']
     stableTable['Stability'] =stableTable['Stability'].apply(lambda x: "Unstable" if x else "Stable")
     return stableTable
 
@@ -41,8 +39,8 @@ def approachPerformance(flight,model, modelConfig,approachType, takeoffWeight):
     gate = flight[flight.AltB>(landingAltitude+gateHeight)].index.max() #stabilised approach gate
     stableTable = isStable(flight.loc[gate:threshold], modelConfig, approachType, runwayTrack)
     thresholdIASBook = float(modelConfig.loc['thresholdIAS','Value'])
-    approachTable = pd.DataFrame(columns=['Actual','Book','Variance%','Units'])
-    approachTable.loc['IAS over threshold'] = [int(thresholdIAS),int(thresholdIASBook), round(100*(thresholdIAS/thresholdIASBook-1)),'knots']
+    approachTable = pd.DataFrame(columns=['Actual','Book','Variance','Units'])
+    approachTable.loc['Approach IAS over threshold'] = [int(thresholdIAS),int(thresholdIASBook), round(100*(thresholdIAS/thresholdIASBook-1)),'knots']
     landingDistance = haversine(flight.loc[threshold, 'Longitude'],flight.loc[threshold, 'Latitude'], flight.loc[stop, 'Longitude'],flight.loc[stop, 'Latitude'],runwayUnits)
     landingDistanceBook = loadBook('landing', model)
     tempVISA = isaDiff(flight.loc[threshold,'OAT'], flight.loc[threshold,'AltPress']) 
@@ -52,9 +50,9 @@ def approachPerformance(flight,model, modelConfig,approachType, takeoffWeight):
     landingWeight = round(calcLandingWeight(flight, modelConfig, takeoffWeight, threshold))
     landingWeightBook = float(modelConfig.loc['maxLandingWeight','Value'])
     bookLandingDistance = getPerf(landingDistanceBook,[tempVISA,flight.loc[threshold,'AltPress'], landingWeight, headwind],runwayUnits)
-    approachTable.loc['Landing Distance'] = [int(landingDistance),int(bookLandingDistance), round(100*(landingDistance/bookLandingDistance-1)),runwayUnits]
-    approachTable.loc['Headwind'] = [int(headwind),'-', '-','knots']
+    approachTable.loc['Approach Landing Distance'] = [int(landingDistance),int(bookLandingDistance), round(100*(landingDistance/bookLandingDistance-1)),runwayUnits]
+    approachTable.loc['Approach Headwind'] = [int(headwind),'-', '-','knots']
     bookCrosswind = float(modelConfig.loc['maxCrosswind','Value'])
-    approachTable.loc['Crosswind'] = [int(abs(crosswind)),int(bookCrosswind), round(100*(abs(crosswind)/bookCrosswind-1)),'knots']
-    approachTable.loc['Landing Weight'] = [int(landingWeight),int(landingWeightBook), round(100*(landingWeight/landingWeightBook-1)),'lbs']
+    approachTable.loc['Approach Crosswind'] = [int(abs(crosswind)),int(bookCrosswind), round(100*(abs(crosswind)/bookCrosswind-1)),'knots']
+    approachTable.loc['Approach Landing Weight'] = [int(landingWeight),int(landingWeightBook), round(100*(landingWeight/landingWeightBook-1)),'lbs']
     return approachTable, stableTable

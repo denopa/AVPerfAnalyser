@@ -26,6 +26,7 @@ cimbMaxTITPowerHigh,38,#higher power for TIT limit - optional unless climbMaxTIT
 maxCHT,380,#
 fuelWeightPerUSG,6.2,#in lbs
 cruiseReferenceWeight,3900,#weight the cruise table is based on 
+cruiseMaxAlt,25000,#
 speedGainPer100lbs,0.7,#in knots
 cruisePowerVariable1,E1 MAP,#
 cruisePowerVariable2,E1 RPM,#

@@ -1,5 +1,6 @@
 # TODO save results in database
 import pandas as pd
+import sqlalchemy
 from libs.takeoffAnalyser import takeoffPerformance
 from libs.climbAnalyser import climbPerformance
 from libs.cruiseAnalyser import cruisePerformance
@@ -15,6 +16,30 @@ def cleanUp(flight): #put everything in the right format
     numericals = flight.columns.drop(['GPSfix','HSIS','Lcl Date','Lcl Time','UTCOfst','AtvWpt'])
     flight[numericals] = flight[numericals].apply(pd.to_numeric, errors='coerce')
     return flight
+
+def transform(csvFileName, meta, tables): #linearise tables
+    linearTable = pd.DataFrame.from_dict(meta, orient='index')
+    for table in tables:
+        lt = pd.Series()
+        for column in table.columns:
+            addUpLt = table[column]
+            addUpLt.index = addUpLt.index + " " + column
+            lt = pd.concat([lt, addUpLt])
+        linearTable = pd.concat([linearTable, lt])
+    linearTable = linearTable.transpose()
+    linearTable.index = [csvFileName.replace('flights/','')]
+    linearTable.index.name = 'file'
+    return linearTable
+
+def saveToDB(linearTable):
+    try:
+        sqlURL =  os.environ['DATABASE_URL']
+    except:
+        sqlURL = "postgresql://localhost/AVPerformance"
+    engine = sqlalchemy.create_engine(sqlURL)
+    conn = engine.connect()
+    frame = linearTable.to_sql('analysed_flights', conn, if_exists='append')
+    conn.close()
 
 def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
 
@@ -45,9 +70,8 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
     else:
         maxTIT = None
     meta = {"registration":registration, "model":model, "flightDate":flightDate}
-    flightSummary = pd.DataFrame.from_dict({"Fuel Start":int(fuelStart), "Fuel End":int(fuelEnd), "Max Altitude":int(maxAltitude), "Max Positive Load":round(maxG,2), "Max Negative Load":round(minG,2), "Max IAS":int(maxIAS), "Max TAS":int(maxTAS),"Max GS":int(maxGS), "Max CHT":int(maxCHT),"Max TIT":'-'}, orient='index', columns = [meta['flightDate']])
-    flightSummary.index.name = meta['registration']
-    flightSummary.loc['Max TIT'] = int(maxTIT)
+    flightSummary = pd.DataFrame.from_dict({"Flight Fuel Start":int(fuelStart), "Flight Fuel End":int(fuelEnd), "Flight Max Altitude":int(maxAltitude), "Flight Max Positive Load":round(maxG,2), "Flight Max Negative Load":round(minG,2), "Flight Max IAS":int(maxIAS), "Flight Max TAS":int(maxTAS),"Flight Max GS":int(maxGS), "Flight Max CHT":int(maxCHT),"Flight Max TIT":'-'}, orient='index', columns = ['Actual'])
+    flightSummary.loc['Flight Max TIT'] = int(maxTIT)
 
     #load book limits
     with open('models/'+model+'/config.csv') as dataFile:
@@ -68,5 +92,10 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
     climbAnalysis = climbPerformance(flight, model, modelConfig)
     cruiseAnalysis = cruisePerformance(flight, model, modelConfig, takeoffWeight)
     approachAnalysis, approachStability = approachPerformance(flight, model, modelConfig, approachType, takeoffWeight)
+    tables = [flightSummary, takeoffAnalysis,takeoffStability, climbAnalysis, cruiseAnalysis, approachAnalysis, approachStability]
 
-    return {"meta":meta,"tables":[flightSummary, takeoffAnalysis,takeoffStability, climbAnalysis, cruiseAnalysis, approachAnalysis, approachStability]}
+    # transform and save to DB
+    linearTable = transform(csvFileName, meta, tables)
+    saveToDB(linearTable)
+
+    return {"meta":meta,"tables":tables}
