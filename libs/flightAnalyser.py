@@ -1,6 +1,6 @@
 # TODO save results in database
 import pandas as pd
-import sqlalchemy
+import sqlalchemy, os
 from libs.takeoffAnalyser import takeoffPerformance
 from libs.climbAnalyser import climbPerformance
 from libs.cruiseAnalyser import cruisePerformance
@@ -15,6 +15,14 @@ def cleanUp(flight): #put everything in the right format
     flight.columns = flight.columns.str.lstrip()
     numericals = flight.columns.drop(['GPSfix','HSIS','Lcl Date','Lcl Time','UTCOfst','AtvWpt'])
     flight[numericals] = flight[numericals].apply(pd.to_numeric, errors='coerce')
+    flight['year'] = flight['Lcl Date'].apply(lambda x: x[:4])
+    flight['month'] = flight['Lcl Date'].apply(lambda x: x[5:7])
+    flight['day'] = flight['Lcl Date'].apply(lambda x: x[8:10])
+    flight['hour'] = pd.to_numeric(flight['Lcl Time'].apply(lambda x: x[:3]), errors='coerce') - pd.to_numeric(flight['UTCOfst'].apply(lambda x: x[:5]), errors='coerce')
+    flight['minute'] = flight['Lcl Time'].apply(lambda x: x[4:6])
+    flight['second'] = flight['Lcl Time'].apply(lambda x: x[7:9])
+    flight['datetime'] = pd.to_datetime(flight[['year','month','day','hour','minute','second']], errors='coerce')
+    flight.drop(columns=['year','month','day','hour','minute','second'], inplace=True)
     return flight
 
 def transform(csvFileName, meta, tables): #linearise tables
@@ -27,7 +35,7 @@ def transform(csvFileName, meta, tables): #linearise tables
             lt = pd.concat([lt, addUpLt])
         linearTable = pd.concat([linearTable, lt])
     linearTable = linearTable.transpose()
-    linearTable.index = [csvFileName.replace('flights/','')]
+    linearTable.index = [os.path.basename(csvFileName)]
     linearTable.index.name = 'file'
     return linearTable
 
@@ -96,6 +104,7 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
 
     # transform and save to DB
     linearTable = transform(csvFileName, meta, tables)
+    linearTable.loc[linearTable.index[0],'Flight'] = flight.to_json()
     saveToDB(linearTable)
 
     return {"meta":meta,"tables":tables}

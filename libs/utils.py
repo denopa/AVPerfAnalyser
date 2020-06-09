@@ -37,7 +37,26 @@ def getPerf(book, x, units):
     for ix in x: #make sure the value to look in the book for is inded in the book, replace by the limit otherwise
         x[i] = min(book.index.get_level_values(i).max(), max(ix,book.index.get_level_values(i).min()))
         i = i+1
-    return interpMatrix(points, values, np.array(x))[0]
+    interpValue = interpMatrix(points, values, np.array(x))[0]
+    if not np.isnan(interpValue).all():
+        return interpValue
+    else: #value cannot be found in the matrix, so we need to check things a bit and try stuff
+        x_test = x
+        i=0
+        pertub = 0.98
+        while (np.isnan(interpValue).all())&(i<len(x)):
+            x_test[i] = x[i] * pertub
+            interpValue = interpMatrix(points, values, np.array(x_test))[0]
+            if np.isnan(interpValue).all(): #try the other way
+                x_test[i] = x[i] / pertub
+                interpValue = interpMatrix(points, values, np.array(x_test))[0]
+            i = i+1
+    if not np.isnan(interpValue).all():
+        return interpValue
+    else: #if all failed, take the average
+        return book[units].mean()
+
+
 
 def loadBook(flightPart, model, **kwargs):
     if flightPart == 'climb':
