@@ -1,4 +1,4 @@
-# TODO save results in database
+# TODO 
 import pandas as pd
 import sqlalchemy, os
 from libs.takeoffAnalyser import takeoffPerformance
@@ -77,7 +77,8 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
         maxTIT = flight['E1 TIT1'].max()
     else:
         maxTIT = None
-    meta = {"registration":registration, "model":model, "flightDate":flightDate}
+    flightDuration = round((flight['datetime'].max() - flight['datetime'].min()).seconds / 3600,1)
+    meta = {"registration":registration, "model":model, "flightDate":flightDate, 'flightDuration':flightDuration}
     flightSummary = pd.DataFrame.from_dict({"Flight Fuel Start":int(fuelStart), "Flight Fuel End":int(fuelEnd), "Flight Max Altitude":int(maxAltitude), "Flight Max Positive Load":round(maxG,2), "Flight Max Negative Load":round(minG,2), "Flight Max IAS":int(maxIAS), "Flight Max TAS":int(maxTAS),"Flight Max GS":int(maxGS), "Flight Max CHT":int(maxCHT),"Flight Max TIT":'-'}, orient='index', columns = ['Actual'])
     flightSummary.loc['Flight Max TIT'] = int(maxTIT)
 
