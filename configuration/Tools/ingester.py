@@ -3,7 +3,7 @@ import os, re
 import pandas as pd
 from libs.flightAnalyser import analyseFlight, cleanUp
 
-folderPath = '/users/Patrick/Documents/Flights' ###fill this in
+folderPath = '/users/Patrick/Downloads/flights' ###fill this in
 
 # all those values will be set to default:
 takeoffMaxWeight = 4135 #an estimate of the weight on those flights if the plane had had full fuel
@@ -28,6 +28,7 @@ def correctWeightForFuel(flight, model):
 
 for file in os.listdir(folderPath):
     if allowedFiles(file):
+        print(file)
         csvFileName = folderPath + "/" + file
         with open(csvFileName) as dataFile:
             metaSource = pd.read_csv(dataFile)

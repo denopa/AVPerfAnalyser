@@ -9,7 +9,7 @@ from libs.approachAnalyser import approachPerformance
 # takeoffWeight = 4135
 # takeoffMethod = 'standard' # 'short`
 # approachType = 'IFR' # 'VFR'
-# csvFileName = "flights/0ed1a44f-ee75-4f22-8ba3-cdb9a83783cb.csv"
+# csvFileName = "flights/08934f46-0f14-4bdf-8c7c-5ce4f75d46f7.csv"
 
 def cleanUp(flight): #put everything in the right format
     flight.columns = flight.columns.str.lstrip()
@@ -78,7 +78,8 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
     else:
         maxTIT = None
     flightDuration = round((flight['datetime'].max() - flight['datetime'].min()).seconds / 3600,1)
-    meta = {"registration":registration, "model":model, "flightDate":flightDate, 'flightDuration':flightDuration}
+    continousData = 0.97*len(flight)/3600 < flightDuration < 1.03*len(flight)/3600
+    meta = {"registration":registration, "model":model, "flightDate":flightDate, 'flightDuration':flightDuration, 'continuousData':continousData}
     flightSummary = pd.DataFrame.from_dict({"Flight Fuel Start":int(fuelStart), "Flight Fuel End":int(fuelEnd), "Flight Max Altitude":int(maxAltitude), "Flight Max Positive Load":round(maxG,2), "Flight Max Negative Load":round(minG,2), "Flight Max IAS":int(maxIAS), "Flight Max TAS":int(maxTAS),"Flight Max GS":int(maxGS), "Flight Max CHT":int(maxCHT),"Flight Max TIT":'-'}, orient='index', columns = ['Actual'])
     flightSummary.loc['Flight Max TIT'] = int(maxTIT)
 
@@ -97,15 +98,29 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
 
 
     # run performnance comparisons
-    takeoffAnalysis, takeoffStability = takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight)
-    climbAnalysis = climbPerformance(flight, model, modelConfig)
-    cruiseAnalysis = cruisePerformance(flight, model, modelConfig, takeoffWeight)
-    approachAnalysis, approachStability = approachPerformance(flight, model, modelConfig, approachType, takeoffWeight)
+    try:
+        takeoffAnalysis, takeoffStability = takeoffPerformance(flight, model, modelConfig, takeoffMethod, takeoffWeight)
+    except:
+        takeoffAnalysis = pd.DataFrame()
+        takeoffStability = pd.DataFrame()
+    try:
+        climbAnalysis = climbPerformance(flight, model, modelConfig)
+    except:
+        climbAnalysis = pd.DataFrame()
+    try:
+        cruiseAnalysis = cruisePerformance(flight, model, modelConfig, takeoffWeight)
+    except:
+        cruiseAnalysis = pd.DataFrame()
+    try:
+        approachAnalysis, approachStability = approachPerformance(flight, model, modelConfig, approachType, takeoffWeight)
+    except:
+        approachAnalysis = pd.DataFrame()
+        approachStability = pd.DataFrame()
     tables = [flightSummary, takeoffAnalysis,takeoffStability, climbAnalysis, cruiseAnalysis, approachAnalysis, approachStability]
 
     # transform and save to DB
     linearTable = transform(csvFileName, meta, tables)
     linearTable.loc[linearTable.index[0],'Flight'] = flight.to_json()
-    saveToDB(linearTable)
+    # saveToDB(linearTable)
 
     return {"meta":meta,"tables":tables}

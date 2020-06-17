@@ -9,7 +9,7 @@ from configuration.units import runwayUnits
 def findTakeoff(flight): #returns the row of the takeoff point
     garminGround = flight[flight['OnGrnd'] == 0].index.min() #Garmin Ground indicator
     startAltitude = flight.loc[garminGround,'AltGPS']
-    return flight[(flight.index>garminGround)&(flight.AltGPS>startAltitude+3)].index.min()
+    return flight[(flight.index>garminGround)&(flight.AltGPS>startAltitude+3)&(flight.VSpd>100)].index.min()
 
 def find50feet(flight): #returns the row of the takeoff point
     garminGround = flight[flight['OnGrnd'] == 0].index.min() #Garmin Ground indicator
@@ -33,8 +33,8 @@ def takeoffStability(flight,modelConfig): #returns the row of the takeoff point
     stableTable.loc['Takeoff Min Pitch'] = [minPitch,bookMinPitch,minPitch<bookMinPitch, 'degrees']
     stableTable.loc['Takeoff Max Roll'] = [maxRoll,bookMaxRoll,maxRoll>bookMaxRoll, 'degrees']
     stableTable.loc['Takeoff Continuous Climb'] = [continuousClimb,'True',not continuousClimb, '-']
-    stableTable.loc['Takeoff Stability'] = [stableTable['Stability'].all(), 'True',not(stableTable['Stability'].all()),'-']
     stableTable['Stability'] = stableTable['Stability'].apply(lambda x: "Unstable" if x else "Stable")
+    stableTable.loc['Takeoff Stability'] = ['Stable' if (stableTable['Stability']=='Stable').all() else 'Unstable', 'True','-','-']
     return stableTable
 
 def findGroundRollStart(groundPortion, modelConfig): #finds the row where take off roll started. This is model dependent

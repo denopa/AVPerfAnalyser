@@ -33,7 +33,6 @@ def cruisePerformance(flight, model, modelConfig, takeoffWeight):
     cruiseTAS = round(cruise['TAS'].mean(),1)
     cruiseTable = pd.DataFrame(columns=['Actual','Book','Variance','units'])
     cruiseTable.loc['Cruise Average TAS'] = [int(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'knots']
-    cruiseTable.loc['Cruise Economy'] = [round(cruiseTAS), int(bookCruiseTAS), round(100*(cruiseTAS/bookCruiseTAS-1)),'nm/g']
     cruiseTable.loc['Cruise Average Ground Speed'] = [int(cruise['GndSpd'].mean()),int(bookCruiseTAS), round(100*(cruise['GndSpd'].mean()/bookCruiseTAS-1)), 'knots']
     if 'maxTIT' in modelConfig.index:
         maxCruiseTIT = cruise['E1 TIT1'].max()

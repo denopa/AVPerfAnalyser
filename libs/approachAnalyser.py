@@ -16,8 +16,9 @@ def isStable(approach, modelConfig, approachType, runwayTrack):
         stableTable.loc['Approach Glide deviation'] = [round(approach.VCDI.abs().max(),1), 1,approach.VCDI.abs().max()>1, '-' ]
     else:
         stableTable.loc['Approach Track'] = [int((approach.TRK - runwayTrack).abs().max()), 10,(approach.TRK - runwayTrack).abs().max()>10, 'degrees' ]
-    stableTable.loc['Approach Stability'] = [stableTable['Stability'].all(), 'True',not(stableTable['Stability'].all()),'-']
+    
     stableTable['Stability'] =stableTable['Stability'].apply(lambda x: "Unstable" if x else "Stable")
+    stableTable.loc['Approach Stability'] = ['Stable' if (stableTable['Stability']=='Stable').all() else 'Unstable', 'True','-','-']
     return stableTable
 
 def calcLandingWeight(flight, modelConfig, takeoffWeight, threshold):
