@@ -9,7 +9,7 @@ from libs.approachAnalyser import approachPerformance
 # takeoffWeight = 4135
 # takeoffMethod = 'standard' # 'short`
 # approachType = 'IFR' # 'VFR'
-# csvFileName = "flights/08934f46-0f14-4bdf-8c7c-5ce4f75d46f7.csv"
+# csvFileName = "flights/73dc0c64-f7ae-4076-bd24-1d27a7bfad6d.csv"
 
 def cleanUp(flight): #put everything in the right format
     flight.columns = flight.columns.str.lstrip()
@@ -54,8 +54,12 @@ def analyseFlight(takeoffWeight,takeoffMethod, approachType, csvFileName):
     # load model and flight data
     with open(csvFileName) as dataFile:
         metaSource = pd.read_csv(dataFile)
-    registration = metaSource.columns[7][14:-1]
-    model = metaSource.columns[2][16:-1].replace(" ","")
+    if len(metaSource.columns[7][14:-1]) <8:
+        registration = metaSource.columns[7][16:-1]
+        model = metaSource.columns[2][16:-1].replace(" ","")
+    else:
+        registration = metaSource.columns[9][14:-1]
+        model = metaSource.columns[4][16:-1].replace(" ","")
     with open(csvFileName) as dataFile:
         flight = pd.read_csv(dataFile, header=2)
         
